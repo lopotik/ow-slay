@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OW SLAY — Премия Overwatch Twitch Community</title>
+<meta name="description" content="Первый ежегодный ивент OW SLAY: чествуем стримеров, модераторов, клипмейкеров и легенд Twitch-комьюнити Overwatch.">
+<meta property="og:title" content="OW SLAY 2026 — Премия Overwatch Twitch Community">
+<meta property="og:description" content="Выбирай лучших в 24 номинациях. Голосование открыто!">
+<meta property="og:image" content="/og-image.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="/" class="logo" style="text-decoration:none;color:inherit">
+      <div class="dot">🔥</div>
+      <div>OW <span>SLAY</span></div>
+    </a>
+    <nav>
+      <ul>
+        <li><a href="#categories">Номинации</a></li>
+        <li><a href="#vote">Голосование</a></li>
+        <li><a href="#rules">Правила</a></li>
+      </ul>
+    </nav>
+    <div id="authBox"></div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="badge"><span class="pulse"></span> OW SLAY 2026 · Голосование открыто</div>
+      <h1>Премия <span class="grad">Slay</span><br>для Overwatch-комьюнити</h1>
+      <p>Первый ежегодный ивент, где мы чествуем стримеров, модераторов, клипмейкеров и легенд Twitch-комьюнити Overwatch. Выбирай лучших — и забирай свой Slay.</p>
+      <div class="hero-actions">
+        <a href="#vote" class="btn btn-primary">Отдать голос</a>
+        <a href="#categories" class="btn btn-ghost">Смотреть номинации</a>
+      </div>
+      <div class="countdown">
+        <div class="cd-box"><div class="cd-num" id="cd-d">--</div><div class="cd-lbl">дней</div></div>
+        <div class="cd-box"><div class="cd-num" id="cd-h">--</div><div class="cd-lbl">часов</div></div>
+        <div class="cd-box"><div class="cd-num" id="cd-m">--</div><div class="cd-lbl">минут</div></div>
+        <div class="cd-box"><div class="cd-num" id="cd-s">--</div><div class="cd-lbl">секунд</div></div>
+      </div>
+    </div>
+    <div class="trophy-wrap">
+      <!-- Статуэтка Slay -->
+      <svg class="trophy" viewBox="0 0 300 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="tg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ff6b35"/>
+            <stop offset=".55" stop-color="#f7c948"/>
+            <stop offset="1" stop-color="#ffb347"/>
+          </linearGradient>
+          <linearGradient id="tg2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f7c948"/>
+            <stop offset="1" stop-color="#c98a12"/>
+          </linearGradient>
+          <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2a3550"/>
+            <stop offset="1" stop-color="#141a29"/>
+          </linearGradient>
+        </defs>
+        <!-- звезда на вершине -->
+        <path d="M150 18 L163 52 L200 56 L172 80 L181 116 L150 96 L119 116 L128 80 L100 56 L137 52 Z" fill="url(#tg)" stroke="#fff5d6" stroke-width="2"/>
+        <!-- кубок -->
+        <path d="M95 130 Q95 100 150 100 Q205 100 205 130 L198 200 Q195 250 150 258 Q105 250 102 200 Z" fill="url(#tg)"/>
+        <path d="M95 130 Q70 130 68 160 Q66 190 95 196 L98 176 Q82 172 82 158 Q82 146 98 146 Z" fill="url(#tg2)"/>
+        <path d="M205 130 Q230 130 232 160 Q234 190 205 196 L202 176 Q218 172 218 158 Q218 146 202 146 Z" fill="url(#tg2)"/>
+        <ellipse cx="150" cy="130" rx="52" ry="14" fill="#fff2c4" opacity=".55"/>
+        <!-- гравировка -->
+        <text x="150" y="190" text-anchor="middle" font-family="Segoe UI,sans-serif" font-weight="900" font-size="26" fill="#3a2405" opacity=".75">SLAY</text>
+        <!-- ножка -->
+        <rect x="138" y="258" width="24" height="26" rx="4" fill="url(#tg2)"/>
+        <rect x="118" y="284" width="64" height="14" rx="6" fill="url(#tg2)"/>
+        <!-- основание -->
+        <rect x="86" y="298" width="128" height="30" rx="8" fill="url(#base)" stroke="#3a4a6b" stroke-width="2"/>
+        <text x="150" y="318" text-anchor="middle" font-family="Segoe UI,sans-serif" font-weight="900" font-size="15" fill="url(#tg)" letter-spacing="2">2026</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="categories">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-kicker">Номинации</div>
+      <h2>24 категории Slay</h2>
+      <p>От «Лучшего флекса» до «Сломанного микрофона» — здесь есть место и для героев, и для мемов.</p>
+    </div>
+    <div class="filters">
+      <button class="filter active" data-f="all">Все</button>
+      <button class="filter" data-f="game">Игровые</button>
+      <button class="filter" data-f="fun">Юмор</button>
+      <button class="filter" data-f="comm">Комьюнити</button>
+      <button class="filter" data-f="spec">Спец</button>
+    </div>
+    <div class="grid" id="grid">
+      <div class="card" data-cat="game"><span class="emoji">👑</span><h3>Slay of the Year</h3><p>Главная номинация: тот, кто сделал больше всего для комьюнити за год.</p><span class="tag">Игровые</span></div>
+      <div class="card" data-cat="game"><span class="emoji">🔀</span><h3>Лучший флекс</h3><p>Играет на всём и везде — танк, дд, хил, без токсика.</p><span class="tag">Игровые</span></div>
+      <div class="card" data-cat="game"><span class="emoji">😇</span><h3>Хиловый ангел</h3><p>Самый заботливый саппорт-мейн, всегда спасёт тиммейта.</p><span class="tag">Игровые</span></div>
+      <div class="card" data-cat="game"><span class="emoji">🛡️</span><h3>Танковый стенд</h3><p>Держит линию, даже когда вся команда разбежалась.</p><span class="tag">Игровые</span></div>
+      <div class="card" data-cat="game"><span class="emoji">🎯</span><h3>Снайпер года</h3><p>Лучшие хедшоты и самые «читерские» моменты.</p><span class="tag">Игровые</span></div>
+      <div class="card" data-cat="fun"><span class="emoji">😂</span><h3>Мем-лорд</h3><p>Самый вирусный клип или мем, разлетевшийся по комьюнити.</p><span class="tag">Юмор</span></div>
+      <div class="card" data-cat="fun"><span class="emoji">🧠</span><h3>Стример-философ</h3><p>«Почему я вообще играю в эту игру?» — самые глубокие мысли в чате.</p><span class="tag">Юмор</span></div>
+      <div class="card" data-cat="game"><span class="emoji">💪</span><h3>Кэрри-потенциал</h3><p>Тащит даже в соло-кью, но никогда не получает похвалы.</p><span class="tag">Игровые</span></div>
+      <div class="card" data-cat="fun"><span class="emoji">💢</span><h3>Лучший тильт</h3><p>Самый эпичный срыв на стриме — с любовью и за артистизм.</p><span class="tag">Юмор</span></div>
+      <div class="card" data-cat="fun"><span class="emoji">📢</span><h3>Самый громкий чат</h3><p>Всегда хаос, спам и KEKW в чате.</p><span class="tag">Юмор</span></div>
+      <div class="card" data-cat="fun"><span class="emoji">⏳</span><h3>Король очереди</h3><p>Стоит в очереди 40 минут и всё равно не попадает в катку.</p><span class="tag">Юмор</span></div>
+      <div class="card" data-cat="fun"><span class="emoji">🎲</span><h3>Мастер пика</h3><p>Самый странный пик героя, который сработал (или нет).</p><span class="tag">Юмор</span></div>
+      <div class="card" data-cat="fun"><span class="emoji">😈</span><h3>Токсичный, но обаятельный</h3><p>Умеет быть язвительным, но не переходит черту.</p><span class="tag">Юмор</span></div>
+      <div class="card" data-cat="fun"><span class="emoji">🎤</span><h3>Сломанный микрофон</h3><p>Самый эпичный технический фейл на стриме.</p><span class="tag">Юмор</span></div>
+      <div class="card" data-cat="comm"><span class="emoji">🫶</span><h3>Душа комьюнити</h3><p>Помогает новичкам, отвечает в чате и создаёт уют.</p><span class="tag">Комьюнити</span></div>
+      <div class="card" data-cat="comm"><span class="emoji">🛡️</span><h3>Лучший модератор</h3><p>Незаметный герой, который держит чат в порядке.</p><span class="tag">Комьюнити</span></div>
+      <div class="card" data-cat="comm"><span class="emoji">🎬</span><h3>Клип-мейкер</h3><p>Лучшие нарезки и трейлеры по стримам.</p><span class="tag">Комьюнити</span></div>
+      <div class="card" data-cat="comm"><span class="emoji">🎨</span><h3>Художник Overwatch</h3><p>Лучший фанарт или эмоут, ставший символом комьюнити.</p><span class="tag">Комьюнити</span></div>
+      <div class="card" data-cat="comm"><span class="emoji">🎙️</span><h3>Голос комьюнити</h3><p>Лучший подкаст, обсуждение или новостной дайджест.</p><span class="tag">Комьюнити</span></div>
+      <div class="card" data-cat="spec"><span class="emoji">🚀</span><h3>Открытие года</h3><p>Новичок, который быстро заявил о себе.</p><span class="tag">Спец</span></div>
+      <div class="card" data-cat="spec"><span class="emoji">🏆</span><h3>Легенда Slay</h3><p>Почётная награда за вклад в комьюнити на протяжении года.</p><span class="tag">Спец</span></div>
+      <div class="card" data-cat="spec"><span class="emoji">🔄</span><h3>Лучший камбэк</h3><p>Вернулся после перерыва и снова зажёг.</p><span class="tag">Спец</span></div>
+      <div class="card" data-cat="spec"><span class="emoji">📅</span><h3>Самый стабильный стрим</h3><p>Стримы по расписанию, без опозданий.</p><span class="tag">Спец</span></div>
+      <div class="card" data-cat="comm"><span class="emoji">🖼️</span><h3>Фан-арт года</h3><p>Лучшая визуальная работа по мотивам стримов и комьюнити.</p><span class="tag">Комьюнити</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="vote">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-kicker">Голосование</div>
+      <h2>Выбери своего Slay-героя</h2>
+      <p>Один голос на номинанта. Войди через Twitch, чтобы голос был честным.</p>
+    </div>
+    <div class="vote-wrap">
+      <div id="voteList"><p style="color:var(--muted)">Загрузка…</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-kicker">Правила</div>
+      <h2>Как это работает</h2>
+      <p>Просто, честно и по-слэйски.</p>
+    </div>
+    <div class="rules">
+      <div class="rule"><div class="num">1</div><h3>Номинация</h3><p>Любой участник комьюнити может предложить кандидата до конца приёма заявок.</p></div>
+      <div class="rule"><div class="num">2</div><h3>Голосование</h3><p>Один голос на номинанта. Голоса принимаются через Twitch-авторизацию.</p></div>
+      <div class="rule"><div class="num">3</div><h3>Финал</h3><p>Топ-3 по голосам выходят в финал, победителя объявляем на стриме-церемонии.</p></div>
+      <div class="rule"><div class="num">4</div><h3>Честность</h3><p>Боты и накрутка — бан. Slay должен быть честным.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-logo">OV <span>SLAY</span></div>
+    <p>Премия Overwatch Twitch Community · 2026</p>
+    <div class="socials">
+      <a href="#" title="Twitch">📺</a>
+      <a href="#" title="Twitter/X">🐦</a>
+      <a href="#" title="Discord">💬</a>
+      <a href="#" title="YouTube">▶️</a>
+    </div>
+    <p style="margin-top:8px;font-size:12px;opacity:.6">Overwatch — торговая марка Blizzard Entertainment. Фан-проект.</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast">Голос принят! 🔥</div>
+<script src="/app.js"></script>
+</body>
+</html>

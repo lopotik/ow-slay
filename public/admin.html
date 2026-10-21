@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OV SLAY — Админка</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a href="/" class="logo" style="text-decoration:none;color:inherit">
+      <div class="dot">🔥</div>
+      <div>OV <span>SLAY</span></div>
+    </a>
+    <nav><ul><li><a href="/">← На главную</a></li></ul></nav>
+    <div id="authBox"></div>
+  </div>
+</header>
+
+<section style="padding-top:40px">
+  <div class="wrap">
+    <div class="sec-head" style="text-align:left;margin-bottom:24px">
+      <div class="sec-kicker">Админ-панель</div>
+      <h2>Управление премией</h2>
+    </div>
+    <div id="adminContent"><p style="color:var(--muted)">Проверка доступа…</p></div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+async function init(){
+  const me = await (await fetch('/api/me')).json();
+  const box = document.getElementById('authBox');
+  if (me.user){
+    box.innerHTML = `<div class="user-chip"><img src="${me.user.avatar}"><span>${me.user.display_name}</span></div>`;
+  }
+  const content = document.getElementById('adminContent');
+  if (!me.isAdmin){
+    content.innerHTML = `<div class="panel"><h3>Доступ запрещён</h3><p style="color:var(--muted)">Войди через Twitch под аккаунтом из ADMIN_TWITCH_IDS.</p><a href="/auth/twitch" class="btn btn-primary" style="margin-top:14px">Войти</a></div>`;
+    return;
+  }
+  renderAdmin();
+}
+
+async function renderAdmin(){
+  const stats = await (await fetch('/api/admin/stats')).json();
+  const { nominees } = await (await fetch('/api/nominees')).json();
+  document.getElementById('adminContent').innerHTML = `
+    <div class="admin-grid">
+      <div class="panel">
+        <h3>Добавить номинанта</h3>
+        <div class="field"><label>Имя</label><input id="f-name" placeholder="VoidSlayer"></div>
+        <div class="field"><label>Описание</label><textarea id="f-desc" rows="2" placeholder="Танк-мейн, мемы..."></textarea></div>
+        <div class="field"><label>Категория</label>
+          <select id="f-cat">
+            <option value="game">Игровые</option>
+            <option value="fun">Юмор</option>
+            <option value="comm">Комьюнити</option>
+            <option value="spec">Спец</option>
+          </select>
+        </div>
+        <div class="field"><label>Twitch login (опц.)</label><input id="f-login" placeholder="voidslayer"></div>
+        <div class="field"><label>URL аватара (опц.)</label><input id="f-avatar" placeholder="https://..."></div>
+        <button class="btn btn-primary" id="addBtn">Добавить</button>
+      </div>
+      <div class="panel">
+        <h3>Статистика</h3>
+        <div class="stat-row"><span>Всего голосов</span><b>${stats.totalVotes}</b></div>
+        <div class="stat-row"><span>Уникальных голосующих</span><b>${stats.totalUsers}</b></div>
+        <div class="stat-row"><span>Номинантов</span><b>${nominees.length}</b></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <h3>Номинанты</h3>
+      <div id="nomList"></div>
+    </div>`;
+
+  const nomList = document.getElementById('nomList');
+  if (!nominees.length){
+    nomList.innerHTML = '<p style="color:var(--muted)">Пусто.</p>';
+  } else {
+    nominees.forEach(n=>{
+      const row = document.createElement('div');
+      row.className = 'stat-row';
+      row.innerHTML = `
+        <span>${n.name} <span style="color:var(--muted);font-size:12px">· ${n.category}</span></span>
+        <span style="display:flex;align-items:center;gap:12px">
+          <b>${n.votes}</b>
+          <button class="del-btn" data-id="${n.id}">Удалить</button>
+        </span>`;
+      nomList.appendChild(row);
+    });
+    nomList.querySelectorAll('.del-btn').forEach(b=>{
+      b.onclick = async ()=>{
+        if (!confirm('Удалить номинанта и его голоса?')) return;
+        await fetch(`/api/admin/nominees/${b.dataset.id}`, {method:'DELETE'});
+        showToast('Удалено');
+        renderAdmin();
+      };
+    });
+  }
+
+  document.getElementById('addBtn').onclick = async ()=>{
+    const body = {
+      name: document.getElementById('f-name').value.trim(),
+      description: document.getElementById('f-desc').value.trim(),
+      category: document.getElementById('f-cat').value,
+      twitch_login: document.getElementById('f-login').value.trim(),
+      avatar: document.getElementById('f-avatar').value.trim()
+    };
+    if (!body.name){ showToast('Введи имя'); return; }
+    const res = await fetch('/api/admin/nominees', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    if (res.ok){ showToast('Номинант добавлен 🔥'); renderAdmin(); }
+    else showToast('Ошибка');
+  };
+}
+
+init();
+</script>
+</body>
+</html>
