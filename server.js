@@ -3,14 +3,20 @@ import express from 'express';
 import cookieSession from 'cookie-session';
 import fetch from 'node-fetch';
 import crypto from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { db } from './db.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(cookieSession({
   name: 'slay_sess',
   secret: process.env.SESSION_SECRET || 'dev_secret',
@@ -383,4 +389,5 @@ app.delete('/api/admin/votes/:id', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'db_error' }); }
 });
 
-app.listen(PORT, () => console.log(`\n🔥 OW SLAY running → ${BASE_URL}\n`));
+// Экспорт для Vercel (вместо app.listen)
+export default app;
