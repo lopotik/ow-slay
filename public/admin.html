@@ -3,16 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OV SLAY — Админка</title>
+<title>OW SLAY — Админка</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<style>
+  .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab { padding: 10px 20px; background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+  .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .res-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+  .res-card h3 { font-size: 18px; margin-bottom: 15px; color: var(--gold); }
+  .res-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .res-item:last-child { border-bottom: none; }
+  
+  .edit-btn { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); padding: 4px 10px; border-radius: 8px; font-size: 11px; cursor: pointer; margin-right: 5px; font-weight: bold; }
+  .edit-btn:hover { background: var(--cyan); color: #000; }
+
+  .drag-handle { cursor: grab; padding: 0 10px 0 0; font-size: 20px; color: var(--muted); user-select: none; display: flex; align-items: center; }
+  .drag-handle:active { cursor: grabbing; }
+  .sortable-ghost { opacity: 0.4; background: var(--bg2) !important; border: 1px dashed var(--accent) !important; }
+  .nom-group { margin-bottom: 20px; background: var(--bg2); border-radius: 12px; padding: 10px; border: 1px solid var(--line); }
+  .nom-group-title { font-weight: 900; color: var(--gold); margin: 5px 0 10px 5px; font-size:14px; text-transform:uppercase; }
+</style>
 </head>
 <body>
 <header>
   <div class="wrap nav">
     <a href="/" class="logo" style="text-decoration:none;color:inherit">
-      <div class="dot">🔥</div>
-      <div>OV <span>SLAY</span></div>
+      <div style="display:flex; align-items:center; gap:6px; font-size:22px; font-weight:900; letter-spacing: 1px;">
+        <img src="/ow-logo.png" alt="O" style="width: 26px; height: 26px; object-fit: contain; margin-top: 3px;">
+        W <span>SLAY</span>
+      </div>
     </a>
     <nav><ul><li><a href="/">← На главную</a></li></ul></nav>
     <div id="authBox"></div>
@@ -25,107 +48,373 @@
       <div class="sec-kicker">Админ-панель</div>
       <h2>Управление премией</h2>
     </div>
-    <div id="adminContent"><p style="color:var(--muted)">Проверка доступа…</p></div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('noms')">Кандидаты</div>
+      <div class="tab" onclick="switchTab('cats')">Номинации</div>
+      <div class="tab" onclick="switchTab('results')">Результаты</div>
+    </div>
+
+    <div id="adminContent"></div>
   </div>
 </section>
 
 <div class="toast" id="toast"></div>
 <script>
+let currentTab = 'noms';
+let editNomId = null;
+let editCatId = null;
+
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'),2600);
 }
 
+function switchTab(tab) {
+  currentTab = tab;
+  editNomId = null;
+  editCatId = null;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const tabs = { noms: 1, cats: 2, results: 3 };
+  document.querySelector(`.tab:nth-child(${tabs[tab]})`).classList.add('active');
+  renderAdmin();
+}
+
 async function init(){
   const me = await (await fetch('/api/me')).json();
   const box = document.getElementById('authBox');
-  if (me.user){
-    box.innerHTML = `<div class="user-chip"><img src="${me.user.avatar}"><span>${me.user.display_name}</span></div>`;
-  }
-  const content = document.getElementById('adminContent');
-  if (!me.isAdmin){
-    content.innerHTML = `<div class="panel"><h3>Доступ запрещён</h3><p style="color:var(--muted)">Войди через Twitch под аккаунтом из ADMIN_TWITCH_IDS.</p><a href="/auth/twitch" class="btn btn-primary" style="margin-top:14px">Войти</a></div>`;
+  if (me.user) box.innerHTML = `<div class="user-chip"><img src="${me.user.avatar}"><span>${me.user.display_name}</span></div>`;
+  
+  if (!me.isAdmin && !window.location.href.includes('localhost')) {
+    document.getElementById('adminContent').innerHTML = `<div class="panel"><h3>Доступ запрещён</h3></div>`;
     return;
   }
   renderAdmin();
 }
 
 async function renderAdmin(){
+  if (currentTab === 'noms') await renderNominees();
+  else if (currentTab === 'cats') await renderCategories();
+  else await renderResults();
+}
+
+// ---------------- КАНДИДАТЫ ----------------
+async function renderNominees() {
   const stats = await (await fetch('/api/admin/stats')).json();
-  const { nominees } = await (await fetch('/api/nominees')).json();
+  const { nominees } = await (await fetch('/api/admin/nominees')).json();
+  const { categories } = await (await fetch('/api/categories')).json();
+  
+  let options = categories.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+  
+  let nomData = null;
+  if (editNomId) nomData = nominees.find(n => n.id === editNomId);
+
   document.getElementById('adminContent').innerHTML = `
     <div class="admin-grid">
       <div class="panel">
-        <h3>Добавить номинанта</h3>
-        <div class="field"><label>Имя</label><input id="f-name" placeholder="VoidSlayer"></div>
-        <div class="field"><label>Описание</label><textarea id="f-desc" rows="2" placeholder="Танк-мейн, мемы..."></textarea></div>
-        <div class="field"><label>Категория</label>
-          <select id="f-cat">
+        <h3>${editNomId ? 'Редактировать кандидата' : 'Добавить кандидата'}</h3>
+        <div class="field"><label>Имя</label><input id="f-name" value="${nomData ? nomData.name : ''}" placeholder="VoidSlayer"></div>
+        <div class="field"><label>Описание</label><textarea id="f-desc" rows="2">${nomData ? nomData.description : ''}</textarea></div>
+        <div class="field"><label>Номинация</label><select id="f-cat">${options}</select></div>
+        <div class="field"><label>Twitch логин</label><input id="f-login" value="${nomData ? nomData.twitch_login : ''}" placeholder="username"></div>
+        <div class="field"><label>ИЛИ URL аватара</label><input id="f-avatar" value="${nomData ? nomData.avatar : ''}" placeholder="https://..."></div>
+        ${!editNomId ? `
+        <div class="field" style="flex-direction:row; align-items:center; gap:10px; margin-top: 5px; margin-bottom: 15px;">
+          <input type="checkbox" id="f-hidden" style="width: auto; cursor: pointer;"> 
+          <label style="margin:0; cursor: pointer;" for="f-hidden">Скрытый</label>
+        </div>` : ''}
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-primary" id="addBtn" style="flex:1;">${editNomId ? 'Сохранить' : 'Добавить'}</button>
+          ${editNomId ? `<button class="btn btn-ghost" onclick="editNomId=null; renderAdmin()">Отмена</button>` : ''}
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Статистика</h3>
+        <div class="stat-row"><span>Всего голосов</span><b>${stats.totalVotes}</b></div>
+        <div class="stat-row"><span>Уникальных голосующих</span><b>${stats.totalUsers}</b></div>
+        <div class="stat-row"><span>Кандидатов</span><b>${nominees.length}</b></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <h3>Список кандидатов (перетаскивайте за иконку ≡)</h3>
+      <div id="nomList"></div>
+    </div>`;
+
+  if (nomData) document.getElementById('f-cat').value = nomData.category;
+
+  const nomList = document.getElementById('nomList');
+  const cats = [...new Set(nominees.map(n => n.category))];
+  
+  if (!nominees.length) nomList.innerHTML = '<p style="color:var(--muted)">Пусто.</p>';
+  else {
+    cats.forEach(catId => {
+      const catNoms = nominees.filter(n => n.category === catId);
+      if (!catNoms.length) return;
+      
+      const catTitle = categories.find(c => c.id === catId)?.title || catId;
+      
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'nom-group';
+      groupDiv.innerHTML = `<div class="nom-group-title">${catTitle}</div>`;
+      
+      const listContainer = document.createElement('div');
+      listContainer.dataset.category = catId;
+      
+      catNoms.forEach(n => {
+        const row = document.createElement('div');
+        row.className = 'stat-row';
+        row.dataset.id = n.id;
+        const hiddenBadge = n.created_by ? `<span style="background:#ef4444; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:5px;">Скрытый</span>` : '';
+        
+        row.innerHTML = `
+          <span style="display:flex; align-items:center;">
+            <div class="drag-handle">≡</div>
+            <span>${n.name} ${hiddenBadge}</span>
+          </span>
+          <span style="display:flex; gap:8px; align-items:center;">
+            <b>${n.votes} голосов</b>
+            <button class="edit-btn" onclick="startEditNom(${n.id})">Ред.</button>
+            <button class="btn-ghost" style="padding:4px 10px; font-size:11px; border-radius:8px; cursor:pointer;" onclick="showVotes(${n.id}, '${n.name.replace(/'/g, "\\'")}')">Голоса</button>
+            <button class="del-btn" onclick="deleteNom(${n.id})">Удалить</button>
+          </span>`;
+        listContainer.appendChild(row);
+      });
+      
+      groupDiv.appendChild(listContainer);
+      nomList.appendChild(groupDiv);
+
+      new Sortable(listContainer, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: async function (evt) {
+          const cat = evt.to.dataset.category;
+          const items = Array.from(evt.to.children).map(child => child.dataset.id);
+          const res = await fetch('/api/admin/nominees/reorder', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ category: cat, order: items })
+          });
+          if (res.ok) showToast('Порядок сохранен');
+        }
+      });
+    });
+  }
+
+  document.getElementById('addBtn').onclick = async ()=>{
+    let desc = document.getElementById('f-desc').value.trim();
+    const login = document.getElementById('f-login').value.trim();
+    
+    if (login && !desc) desc = `Канал на Twitch: twitch.tv/${login.toLowerCase()}`;
+
+    const body = {
+      name: document.getElementById('f-name').value.trim(),
+      description: desc,
+      category: document.getElementById('f-cat').value,
+      twitch_login: login,
+      avatar: document.getElementById('f-avatar').value.trim(),
+      is_hidden: !editNomId && document.getElementById('f-hidden') ? document.getElementById('f-hidden').checked : undefined
+    };
+    if (!body.name) return showToast('Введи имя');
+    
+    const url = editNomId ? `/api/admin/nominees/${editNomId}` : '/api/admin/nominees';
+    const method = editNomId ? 'PUT' : 'POST';
+    
+    document.getElementById('addBtn').textContent = 'Сохранение...';
+    const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    if (res.ok){ 
+      showToast(editNomId ? 'Обновлено' : 'Добавлено'); 
+      editNomId = null;
+      renderAdmin(); 
+    } else showToast('Ошибка');
+  };
+}
+
+window.startEditNom = (id) => { editNomId = id; renderAdmin(); window.scrollTo(0,0); };
+window.deleteNom = async (id) => {
+  if (!confirm('Удалить?')) return;
+  await fetch(`/api/admin/nominees/${id}`, {method:'DELETE'});
+  showToast('Удалено'); renderAdmin();
+};
+
+// ---------------- НОМИНАЦИИ ----------------
+async function renderCategories() {
+  const { categories } = await (await fetch('/api/categories')).json();
+  
+  let catData = null;
+  if (editCatId) catData = categories.find(c => c.id === editCatId);
+
+  document.getElementById('adminContent').innerHTML = `
+    <div class="admin-grid">
+      <div class="panel">
+        <h3>${editCatId ? 'Редактировать номинацию' : 'Добавить номинацию'}</h3>
+        <div class="field"><label>ID (англ. без пробелов)</label><input id="c-id" value="${catData ? catData.id : ''}" placeholder="best_meme" ${editCatId ? 'disabled' : ''}></div>
+        <div class="field"><label>Название</label><input id="c-title" value="${catData ? catData.title : ''}" placeholder="Лучший мем"></div>
+        <div class="field"><label>Описание</label><textarea id="c-desc" rows="2">${catData ? catData.description : ''}</textarea></div>
+        <div class="field"><label>Иконка (эмодзи)</label><input id="c-icon" value="${catData ? catData.icon : ''}" placeholder="😂"></div>
+        <div class="field"><label>ИЛИ URL картинки</label><input id="c-image" value="${catData ? catData.image_url : ''}" placeholder="https://..."></div>
+        <div class="field"><label>Фильтр (категория)</label>
+          <select id="c-filter">
             <option value="game">Игровые</option>
             <option value="fun">Юмор</option>
             <option value="comm">Комьюнити</option>
             <option value="spec">Спец</option>
           </select>
         </div>
-        <div class="field"><label>Twitch login (опц.)</label><input id="f-login" placeholder="voidslayer"></div>
-        <div class="field"><label>URL аватара (опц.)</label><input id="f-avatar" placeholder="https://..."></div>
-        <button class="btn btn-primary" id="addBtn">Добавить</button>
-      </div>
-      <div class="panel">
-        <h3>Статистика</h3>
-        <div class="stat-row"><span>Всего голосов</span><b>${stats.totalVotes}</b></div>
-        <div class="stat-row"><span>Уникальных голосующих</span><b>${stats.totalUsers}</b></div>
-        <div class="stat-row"><span>Номинантов</span><b>${nominees.length}</b></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-primary" id="addCatBtn" style="flex:1;">${editCatId ? 'Сохранить' : 'Добавить'}</button>
+          ${editCatId ? `<button class="btn btn-ghost" onclick="editCatId=null; renderAdmin()">Отмена</button>` : ''}
+        </div>
       </div>
     </div>
     <div class="panel" style="margin-top:20px">
-      <h3>Номинанты</h3>
-      <div id="nomList"></div>
+      <h3>Список номинаций (перетаскивайте за иконку ≡)</h3>
+      <div id="catList"></div>
     </div>`;
 
-  const nomList = document.getElementById('nomList');
-  if (!nominees.length){
-    nomList.innerHTML = '<p style="color:var(--muted)">Пусто.</p>';
-  } else {
-    nominees.forEach(n=>{
+  if (catData) document.getElementById('c-filter').value = catData.filter;
+
+  const catList = document.getElementById('catList');
+  catList.innerHTML = '';
+  
+  categories.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.dataset.id = c.id;
+    row.innerHTML = `
+      <span style="display:flex; align-items:center;">
+        <div class="drag-handle">≡</div>
+        <span>${c.icon} ${c.title} <span style="color:var(--muted);font-size:12px">(${c.id})</span></span>
+      </span>
+      <span style="display:flex; gap:8px;">
+        <button class="edit-btn" onclick="startEditCat('${c.id}')">Ред.</button>
+        <button class="del-btn" onclick="deleteCat('${c.id}')">Удалить</button>
+      </span>`;
+    catList.appendChild(row);
+  });
+
+  new Sortable(catList, {
+    animation: 150,
+    handle: '.drag-handle',
+    ghostClass: 'sortable-ghost',
+    onEnd: async function (evt) {
+      const items = Array.from(evt.to.children).map(child => child.dataset.id);
+      const res = await fetch('/api/admin/categories/reorder', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ order: items })
+      });
+      if (res.ok) showToast('Порядок сохранен');
+    }
+  });
+
+  document.getElementById('addCatBtn').onclick = async ()=>{
+    const body = {
+      id: document.getElementById('c-id').value.trim(),
+      title: document.getElementById('c-title').value.trim(),
+      description: document.getElementById('c-desc').value.trim(),
+      icon: document.getElementById('c-icon').value.trim(),
+      image_url: document.getElementById('c-image').value.trim(),
+      filter: document.getElementById('c-filter').value
+    };
+    if (!body.id || !body.title) return showToast('Введи ID и Название');
+    
+    const url = editCatId ? `/api/admin/categories/${editCatId}` : '/api/admin/categories';
+    const method = editCatId ? 'PUT' : 'POST';
+    
+    const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    if (res.ok){ 
+      showToast(editCatId ? 'Обновлено' : 'Добавлено'); 
+      editCatId = null;
+      renderAdmin(); 
+    } else showToast('Ошибка (возможно, ID занят)');
+  };
+}
+
+window.startEditCat = (id) => { editCatId = id; renderAdmin(); window.scrollTo(0,0); };
+window.deleteCat = async (id) => {
+  if (!confirm('Удалить номинацию и ВСЕХ её кандидатов?')) return;
+  await fetch(`/api/admin/categories/${id}`, {method:'DELETE'});
+  showToast('Удалено'); renderAdmin();
+};
+
+// ---------------- РЕЗУЛЬТАТЫ ----------------
+async function renderResults() {
+  const { results } = await (await fetch('/api/admin/results')).json();
+  let html = '';
+  results.forEach(r => {
+    if (r.nominees.length === 0) return;
+    html += `<div class="res-card">
+      <h3>${r.category.icon} ${r.category.title} <span style="font-size:12px; color:var(--muted); font-weight:normal;">(Всего: ${r.totalVotes})</span></h3>`;
+    r.nominees.forEach(n => {
+      html += `
+        <div class="res-item">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:30px; height:30px; border-radius:50%; overflow:hidden; background:var(--bg2);">
+              ${n.avatar ? `<img src="${n.avatar}" style="width:100%; height:100%; object-fit:cover;">` : `<div style="display:grid; place-items:center; height:100%; font-weight:bold;">${n.name[0].toUpperCase()}</div>`}
+            </div>
+            <span>${n.name}</span>
+          </div>
+          <div><b>${n.votes} голосов</b> <span style="color:var(--gold); width:40px; display:inline-block; text-align:right;">${n.pct}%</span></div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  if (!html) html = '<p style="color:var(--muted)">Нет данных для отображения.</p>';
+  document.getElementById('adminContent').innerHTML = html;
+}
+
+// ---------------- ПРОСМОТР ГОЛОСОВ ----------------
+async function showVotes(nomineeId, nomineeName) {
+  let modal = document.getElementById('votesModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'votesModal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999; align-items:center; justify-content:center; backdrop-filter:blur(5px);';
+    modal.innerHTML = `
+      <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; width:100%; max-width:500px; padding:30px; position:relative; max-height:80vh; overflow-y:auto;">
+        <button onclick="document.getElementById('votesModal').style.display='none'" style="position:absolute; top:15px; right:20px; background:none; border:none; color:var(--muted); font-size:24px; cursor:pointer;">✕</button>
+        <h2 id="votesModalTitle" style="margin-bottom:20px; font-size:22px; font-weight:900;">Голоса</h2>
+        <div id="votesModalList"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('votesModalTitle').textContent = `Голоса за ${nomineeName}`;
+  const list = document.getElementById('votesModalList');
+  list.innerHTML = '<p style="color:var(--muted)">Загрузка...</p>';
+  modal.style.display = 'flex';
+
+  try {
+    const res = await fetch(`/api/admin/nominees/${nomineeId}/votes`);
+    const { votes } = await res.json();
+    if (!votes.length) { list.innerHTML = '<p style="color:var(--muted)">Голосов пока нет.</p>'; return; }
+    list.innerHTML = '';
+    votes.forEach(v => {
+      const date = new Date(v.created_at).toLocaleDateString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
       const row = document.createElement('div');
       row.className = 'stat-row';
       row.innerHTML = `
-        <span>${n.name} <span style="color:var(--muted);font-size:12px">· ${n.category}</span></span>
-        <span style="display:flex;align-items:center;gap:12px">
-          <b>${n.votes}</b>
-          <button class="del-btn" data-id="${n.id}">Удалить</button>
+        <span style="font-weight:bold;">${v.user_login}</span>
+        <span style="display:flex; gap:15px; align-items:center;">
+          <span style="font-size:12px; color:var(--muted);">${date}</span>
+          <button class="del-btn" style="padding:3px 8px; font-size:11px;" onclick="deleteVote(${v.id}, ${nomineeId}, '${nomineeName.replace(/'/g, "\\'")}')">Удалить</button>
         </span>`;
-      nomList.appendChild(row);
+      list.appendChild(row);
     });
-    nomList.querySelectorAll('.del-btn').forEach(b=>{
-      b.onclick = async ()=>{
-        if (!confirm('Удалить номинанта и его голоса?')) return;
-        await fetch(`/api/admin/nominees/${b.dataset.id}`, {method:'DELETE'});
-        showToast('Удалено');
-        renderAdmin();
-      };
-    });
-  }
+  } catch (e) { list.innerHTML = '<p style="color:#ef4444">Ошибка загрузки.</p>'; }
+}
 
-  document.getElementById('addBtn').onclick = async ()=>{
-    const body = {
-      name: document.getElementById('f-name').value.trim(),
-      description: document.getElementById('f-desc').value.trim(),
-      category: document.getElementById('f-cat').value,
-      twitch_login: document.getElementById('f-login').value.trim(),
-      avatar: document.getElementById('f-avatar').value.trim()
-    };
-    if (!body.name){ showToast('Введи имя'); return; }
-    const res = await fetch('/api/admin/nominees', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
-    if (res.ok){ showToast('Номинант добавлен 🔥'); renderAdmin(); }
-    else showToast('Ошибка');
-  };
+async function deleteVote(voteId, nomineeId, nomineeName) {
+  if (!confirm('Удалить этот голос?')) return;
+  try {
+    await fetch(`/api/admin/votes/${voteId}`, { method: 'DELETE' });
+    showToast('Голос удален');
+    showVotes(nomineeId, nomineeName);
+    renderAdmin();
+  } catch (e) { showToast('Ошибка'); }
 }
 
 init();

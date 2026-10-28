@@ -12,19 +12,31 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/style.css">
+<style>
+  .vote-item .avatar {
+    width: 56px !important; height: 56px !important; border-radius: 50% !important; 
+    overflow: hidden; background: var(--bg2); flex-shrink: 0;
+  }
+  .vote-item .avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .vote-info a { color: var(--cyan); text-decoration: none; }
+  .vote-info a:hover { text-decoration: underline; }
+  #confirmAvatar { background: var(--bg2) !important; display: block !important; padding: 0 !important; }
+  #confirmAvatar img { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 50%; }
+</style>
 </head>
 <body>
 
 <header>
   <div class="wrap nav">
     <a href="/" class="logo" style="text-decoration:none;color:inherit">
-      <div class="dot">🔥</div>
-      <div>OW <span>SLAY</span></div>
+      <div style="display:flex; align-items:center; gap:6px; font-size:22px; font-weight:900; letter-spacing: 1px;">
+        <img src="/ow-logo.png" alt="O" style="width: 26px; height: 26px; object-fit: contain; margin-top: 3px;">
+        W <span>SLAY</span>
+      </div>
     </a>
     <nav>
       <ul>
         <li><a href="#categories">Номинации</a></li>
-        <li><a href="#vote">Голосование</a></li>
         <li><a href="#rules">Правила</a></li>
       </ul>
     </nav>
@@ -39,8 +51,8 @@
       <h1>Премия <span class="grad">Slay</span><br>для Overwatch-комьюнити</h1>
       <p>Первый ежегодный ивент, где мы чествуем стримеров, модераторов, клипмейкеров и легенд Twitch-комьюнити Overwatch. Выбирай лучших — и забирай свой Slay.</p>
       <div class="hero-actions">
-        <a href="#vote" class="btn btn-primary">Отдать голос</a>
-        <a href="#categories" class="btn btn-ghost">Смотреть номинации</a>
+        <a href="#categories" class="btn btn-primary">Отдать голос</a>
+        <a href="#rules" class="btn btn-ghost">Смотреть правила</a>
       </div>
       <div class="countdown">
         <div class="cd-box"><div class="cd-num" id="cd-d">--</div><div class="cd-lbl">дней</div></div>
@@ -50,38 +62,30 @@
       </div>
     </div>
     <div class="trophy-wrap">
-      <!-- Статуэтка Slay -->
-      <svg class="trophy" viewBox="0 0 300 340" xmlns="http://www.w3.org/2000/svg">
+      <svg class="trophy" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="tg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#ff6b35"/>
-            <stop offset=".55" stop-color="#f7c948"/>
-            <stop offset="1" stop-color="#ffb347"/>
-          </linearGradient>
-          <linearGradient id="tg2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#f7c948"/>
-            <stop offset="1" stop-color="#c98a12"/>
-          </linearGradient>
-          <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#2a3550"/>
-            <stop offset="1" stop-color="#141a29"/>
-          </linearGradient>
+          <linearGradient id="ow-orange" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f99e1a"/><stop offset="100%" stop-color="#d36b00"/></linearGradient>
+          <linearGradient id="ow-white" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#b0b8c8"/></linearGradient>
+          <linearGradient id="ow-dark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#2a3550"/><stop offset="100%" stop-color="#0e1320"/></linearGradient>
         </defs>
-        <!-- звезда на вершине -->
-        <path d="M150 18 L163 52 L200 56 L172 80 L181 116 L150 96 L119 116 L128 80 L100 56 L137 52 Z" fill="url(#tg)" stroke="#fff5d6" stroke-width="2"/>
-        <!-- кубок -->
-        <path d="M95 130 Q95 100 150 100 Q205 100 205 130 L198 200 Q195 250 150 258 Q105 250 102 200 Z" fill="url(#tg)"/>
-        <path d="M95 130 Q70 130 68 160 Q66 190 95 196 L98 176 Q82 172 82 158 Q82 146 98 146 Z" fill="url(#tg2)"/>
-        <path d="M205 130 Q230 130 232 160 Q234 190 205 196 L202 176 Q218 172 218 158 Q218 146 202 146 Z" fill="url(#tg2)"/>
-        <ellipse cx="150" cy="130" rx="52" ry="14" fill="#fff2c4" opacity=".55"/>
-        <!-- гравировка -->
-        <text x="150" y="190" text-anchor="middle" font-family="Segoe UI,sans-serif" font-weight="900" font-size="26" fill="#3a2405" opacity=".75">SLAY</text>
-        <!-- ножка -->
-        <rect x="138" y="258" width="24" height="26" rx="4" fill="url(#tg2)"/>
-        <rect x="118" y="284" width="64" height="14" rx="6" fill="url(#tg2)"/>
-        <!-- основание -->
-        <rect x="86" y="298" width="128" height="30" rx="8" fill="url(#base)" stroke="#3a4a6b" stroke-width="2"/>
-        <text x="150" y="318" text-anchor="middle" font-family="Segoe UI,sans-serif" font-weight="900" font-size="15" fill="url(#tg)" letter-spacing="2">2026</text>
+        <circle cx="150" cy="150" r="100" fill="url(#ow-orange)" opacity="0.15" filter="blur(20px)"/>
+        <path d="M70 150 A 80 80 0 0 1 230 150 L 200 150 A 50 50 0 0 0 100 150 Z" fill="url(#ow-orange)"/>
+        <g transform="translate(150, 160) scale(0.6)">
+          <circle cx="0" cy="0" r="45" fill="none" stroke="#ffffff" stroke-width="8" stroke-dasharray="200 20" stroke-dashoffset="45"/>
+          <path d="M 0 -40 L 15 -10 L 0 10 L -15 -10 Z" fill="#ffffff"/>
+          <path d="M 0 10 L 25 40 L 10 40 L 0 25 Z" fill="#ffffff"/>
+          <path d="M 0 10 L -25 40 L -10 40 L 0 25 Z" fill="#ffffff"/>
+        </g>
+        <path d="M 80 200 L 220 200 L 200 290 Q 150 330 100 290 Z" fill="url(#ow-white)"/>
+        <path d="M 80 210 Q 40 210 50 260 Q 60 300 100 285" fill="none" stroke="url(#ow-white)" stroke-width="16" stroke-linecap="round"/>
+        <path d="M 220 210 Q 260 210 250 260 Q 240 300 200 285" fill="none" stroke="url(#ow-white)" stroke-width="16" stroke-linecap="round"/>
+        <path d="M 85 230 L 215 230 L 210 250 L 90 250 Z" fill="url(#ow-orange)"/>
+        <path d="M 110 265 L 190 265 L 180 300 Q 150 315 120 300 Z" fill="url(#ow-dark)" />
+        <text x="150" y="293" text-anchor="middle" font-family="Segoe UI,sans-serif" font-weight="900" font-size="22" fill="url(#ow-orange)" letter-spacing="2">SLAY</text>
+        <rect x="135" y="315" width="30" height="25" fill="url(#ow-white)"/>
+        <rect x="110" y="340" width="80" height="12" rx="4" fill="url(#ow-orange)"/>
+        <rect x="60" y="355" width="180" height="40" rx="8" fill="url(#ow-dark)" stroke="url(#ow-orange)" stroke-width="2"/>
+        <text x="150" y="382" text-anchor="middle" font-family="Segoe UI,sans-serif" font-weight="900" font-size="18" fill="url(#ow-white)" letter-spacing="4">2026</text>
       </svg>
     </div>
   </div>
@@ -91,8 +95,8 @@
   <div class="wrap">
     <div class="sec-head">
       <div class="sec-kicker">Номинации</div>
-      <h2>24 категории Slay</h2>
-      <p>От «Лучшего флекса» до «Сломанного микрофона» — здесь есть место и для героев, и для мемов.</p>
+      <h2>12 категории Slay</h2>
+      <p>Нажми на любую карточку, чтобы посмотреть кандидатов и проголосовать!</p>
     </div>
     <div class="filters">
       <button class="filter active" data-f="all">Все</button>
@@ -101,45 +105,7 @@
       <button class="filter" data-f="comm">Комьюнити</button>
       <button class="filter" data-f="spec">Спец</button>
     </div>
-    <div class="grid" id="grid">
-      <div class="card" data-cat="game"><span class="emoji">👑</span><h3>Slay of the Year</h3><p>Главная номинация: тот, кто сделал больше всего для комьюнити за год.</p><span class="tag">Игровые</span></div>
-      <div class="card" data-cat="game"><span class="emoji">🔀</span><h3>Лучший флекс</h3><p>Играет на всём и везде — танк, дд, хил, без токсика.</p><span class="tag">Игровые</span></div>
-      <div class="card" data-cat="game"><span class="emoji">😇</span><h3>Хиловый ангел</h3><p>Самый заботливый саппорт-мейн, всегда спасёт тиммейта.</p><span class="tag">Игровые</span></div>
-      <div class="card" data-cat="game"><span class="emoji">🛡️</span><h3>Танковый стенд</h3><p>Держит линию, даже когда вся команда разбежалась.</p><span class="tag">Игровые</span></div>
-      <div class="card" data-cat="game"><span class="emoji">🎯</span><h3>Снайпер года</h3><p>Лучшие хедшоты и самые «читерские» моменты.</p><span class="tag">Игровые</span></div>
-      <div class="card" data-cat="fun"><span class="emoji">😂</span><h3>Мем-лорд</h3><p>Самый вирусный клип или мем, разлетевшийся по комьюнити.</p><span class="tag">Юмор</span></div>
-      <div class="card" data-cat="fun"><span class="emoji">🧠</span><h3>Стример-философ</h3><p>«Почему я вообще играю в эту игру?» — самые глубокие мысли в чате.</p><span class="tag">Юмор</span></div>
-      <div class="card" data-cat="game"><span class="emoji">💪</span><h3>Кэрри-потенциал</h3><p>Тащит даже в соло-кью, но никогда не получает похвалы.</p><span class="tag">Игровые</span></div>
-      <div class="card" data-cat="fun"><span class="emoji">💢</span><h3>Лучший тильт</h3><p>Самый эпичный срыв на стриме — с любовью и за артистизм.</p><span class="tag">Юмор</span></div>
-      <div class="card" data-cat="fun"><span class="emoji">📢</span><h3>Самый громкий чат</h3><p>Всегда хаос, спам и KEKW в чате.</p><span class="tag">Юмор</span></div>
-      <div class="card" data-cat="fun"><span class="emoji">⏳</span><h3>Король очереди</h3><p>Стоит в очереди 40 минут и всё равно не попадает в катку.</p><span class="tag">Юмор</span></div>
-      <div class="card" data-cat="fun"><span class="emoji">🎲</span><h3>Мастер пика</h3><p>Самый странный пик героя, который сработал (или нет).</p><span class="tag">Юмор</span></div>
-      <div class="card" data-cat="fun"><span class="emoji">😈</span><h3>Токсичный, но обаятельный</h3><p>Умеет быть язвительным, но не переходит черту.</p><span class="tag">Юмор</span></div>
-      <div class="card" data-cat="fun"><span class="emoji">🎤</span><h3>Сломанный микрофон</h3><p>Самый эпичный технический фейл на стриме.</p><span class="tag">Юмор</span></div>
-      <div class="card" data-cat="comm"><span class="emoji">🫶</span><h3>Душа комьюнити</h3><p>Помогает новичкам, отвечает в чате и создаёт уют.</p><span class="tag">Комьюнити</span></div>
-      <div class="card" data-cat="comm"><span class="emoji">🛡️</span><h3>Лучший модератор</h3><p>Незаметный герой, который держит чат в порядке.</p><span class="tag">Комьюнити</span></div>
-      <div class="card" data-cat="comm"><span class="emoji">🎬</span><h3>Клип-мейкер</h3><p>Лучшие нарезки и трейлеры по стримам.</p><span class="tag">Комьюнити</span></div>
-      <div class="card" data-cat="comm"><span class="emoji">🎨</span><h3>Художник Overwatch</h3><p>Лучший фанарт или эмоут, ставший символом комьюнити.</p><span class="tag">Комьюнити</span></div>
-      <div class="card" data-cat="comm"><span class="emoji">🎙️</span><h3>Голос комьюнити</h3><p>Лучший подкаст, обсуждение или новостной дайджест.</p><span class="tag">Комьюнити</span></div>
-      <div class="card" data-cat="spec"><span class="emoji">🚀</span><h3>Открытие года</h3><p>Новичок, который быстро заявил о себе.</p><span class="tag">Спец</span></div>
-      <div class="card" data-cat="spec"><span class="emoji">🏆</span><h3>Легенда Slay</h3><p>Почётная награда за вклад в комьюнити на протяжении года.</p><span class="tag">Спец</span></div>
-      <div class="card" data-cat="spec"><span class="emoji">🔄</span><h3>Лучший камбэк</h3><p>Вернулся после перерыва и снова зажёг.</p><span class="tag">Спец</span></div>
-      <div class="card" data-cat="spec"><span class="emoji">📅</span><h3>Самый стабильный стрим</h3><p>Стримы по расписанию, без опозданий.</p><span class="tag">Спец</span></div>
-      <div class="card" data-cat="comm"><span class="emoji">🖼️</span><h3>Фан-арт года</h3><p>Лучшая визуальная работа по мотивам стримов и комьюнити.</p><span class="tag">Комьюнити</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="vote">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="sec-kicker">Голосование</div>
-      <h2>Выбери своего Slay-героя</h2>
-      <p>Один голос на номинанта. Войди через Twitch, чтобы голос был честным.</p>
-    </div>
-    <div class="vote-wrap">
-      <div id="voteList"><p style="color:var(--muted)">Загрузка…</p></div>
-    </div>
+    <div class="grid" id="grid"></div>
   </div>
 </section>
 
@@ -151,8 +117,8 @@
       <p>Просто, честно и по-слэйски.</p>
     </div>
     <div class="rules">
-      <div class="rule"><div class="num">1</div><h3>Номинация</h3><p>Любой участник комьюнити может предложить кандидата до конца приёма заявок.</p></div>
-      <div class="rule"><div class="num">2</div><h3>Голосование</h3><p>Один голос на номинанта. Голоса принимаются через Twitch-авторизацию.</p></div>
+      <div class="rule"><div class="num">1</div><h3>Номинация</h3><p>Любой участник комьюнити может предложить кандидата.</p></div>
+      <div class="rule"><div class="num">2</div><h3>Голосование</h3><p>Один голос на категорию. Голоса принимаются через Twitch-авторизацию.</p></div>
       <div class="rule"><div class="num">3</div><h3>Финал</h3><p>Топ-3 по голосам выходят в финал, победителя объявляем на стриме-церемонии.</p></div>
       <div class="rule"><div class="num">4</div><h3>Честность</h3><p>Боты и накрутка — бан. Slay должен быть честным.</p></div>
     </div>
@@ -161,7 +127,10 @@
 
 <footer>
   <div class="wrap">
-    <div class="footer-logo">OV <span>SLAY</span></div>
+    <div class="footer-logo" style="display:flex; align-items:center; justify-content:center; gap:6px; font-size: 22px; letter-spacing: 1px;">
+      <img src="/ow-logo.png" alt="O" style="width: 24px; height: 24px; object-fit: contain; margin-top: 3px;">
+      W <span>SLAY</span>
+    </div>
     <p>Премия Overwatch Twitch Community · 2026</p>
     <div class="socials">
       <a href="#" title="Twitch">📺</a>
@@ -174,6 +143,45 @@
 </footer>
 
 <div class="toast" id="toast">Голос принят! 🔥</div>
+
+<!-- МОДАЛЬНОЕ ОКНО ДЛЯ ГОЛОСОВАНИЯ -->
+<div id="voteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+  <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; width:100%; max-width:600px; padding:30px; position:relative; max-height:80vh; overflow-y:auto;">
+    <button onclick="closeVoteModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:var(--muted); font-size:24px; cursor:pointer;">✕</button>
+    <h2 id="modalTitle" data-nomid="" style="margin-bottom:20px; font-size:24px; font-weight:900;">Номинация</h2>
+    <div id="modalList"></div>
+    <button id="suggestBtnTrigger" class="btn btn-ghost" onclick="openSuggestModal(document.getElementById('modalTitle').dataset.nomid)" style="width: 100%; margin-top: 20px; border-color: var(--gold); color: var(--gold);">💡 Не нашли своего? Предложить кандидата</button>
+  </div>
+</div>
+
+<!-- ОКНО ПОДТВЕРЖДЕНИЯ -->
+<div id="confirmModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
+  <div style="background:var(--card); border:1px solid var(--line); border-radius:24px; width:90%; max-width:400px; padding:30px; text-align:center; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+    <div id="confirmAvatar" style="width:80px; height:80px; border-radius:50%; margin:0 auto 15px; overflow:hidden; border:3px solid var(--line); background:var(--bg2);"></div>
+    <h3 style="font-size:20px; font-weight:900; margin-bottom:8px;">Подтверждение</h3>
+    <p style="color:var(--muted); font-size:14px; margin-bottom:24px; line-height:1.5;">
+      Вы уверены, что хотите отдать свой голос за <br><b id="confirmName" style="color:var(--gold); font-size:16px;">Кандидата</b>?<br>
+      <span style="color:#ef4444; font-size:12px; margin-top:5px; display:inline-block;">Отменить голос будет нельзя!</span>
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button onclick="closeConfirmModal()" style="flex:1; padding:12px; border-radius:12px; background:transparent; border:1px solid var(--line); color:var(--text); font-weight:bold; cursor:pointer; font-size:14px; transition:0.2s;">Отмена</button>
+      <button id="confirmVoteBtn" style="flex:1; padding:12px; border-radius:12px; background:linear-gradient(135deg,var(--accent),#ff8f5e); border:none; color:#1a0e05; font-weight:900; cursor:pointer; font-size:14px; box-shadow:0 4px 15px rgba(255,107,53,0.3); transition:0.2s;">Голосовать</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО ПРЕДЛОЖКИ -->
+<div id="suggestModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1001; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+  <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; width:100%; max-width:500px; padding:30px; position:relative;">
+    <button onclick="closeSuggestModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:var(--muted); font-size:24px; cursor:pointer;">✕</button>
+    <h2 style="margin-bottom: 15px; font-size: 22px;">Предложить своего</h2>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">Кандидат добавится в эту номинацию, но увидите его только вы.</p>
+    <input type="hidden" id="suggestCategoryId">
+    <div class="field"><label>Точный ник на Twitch</label><input id="s-login" placeholder="voidslayer"></div>
+    <button class="btn btn-primary" id="suggestBtn" onclick="submitSuggest()" style="width:100%; margin-top:10px;">Проверить и добавить</button>
+  </div>
+</div>
+
 <script src="/app.js"></script>
 </body>
 </html>

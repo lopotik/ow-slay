@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мой профиль — OW SLAY</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .profile-header {
+    display: flex; align-items: center; gap: 24px; padding: 40px 0;
+    border-bottom: 1px solid var(--line); margin-bottom: 30px;
+  }
+  .profile-avatar {
+    width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--accent);
+    box-shadow: 0 0 30px rgba(255,107,53,0.3);
+    object-fit: cover;
+  }
+  .profile-info h1 { font-size: 28px; margin-bottom: 8px; }
+  .profile-info p { color: var(--muted); font-size: 14px; }
+  .vote-card {
+    display: flex; align-items: center; gap: 16px; background: var(--card);
+    border: 1px solid var(--line); padding: 16px; border-radius: 16px; margin-bottom: 12px;
+  }
+  .vote-cat-icon {
+    font-size: 24px; width: 48px; height: 48px; display: grid; place-items: center;
+    background: var(--bg2); border-radius: 12px;
+  }
+  .vote-nom-avatar {
+    width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+    margin-left: auto; border: 2px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="/" class="logo" style="text-decoration:none;color:inherit">
+      <div style="display:flex; align-items:center; gap:6px; font-size:22px; font-weight:900; letter-spacing: 1px;">
+        <img src="/ow-logo.png" alt="O" style="width: 26px; height: 26px; object-fit: contain; margin-top: 3px;">
+        W <span>SLAY</span>
+      </div>
+    </a>
+    <nav>
+      <ul>
+        <li><a href="/">← На главную</a></li>
+        <li><a href="/profile.html" style="color:var(--accent)">Мой профиль</a></li>
+      </ul>
+    </nav>
+    <div id="authBox"></div>
+  </div>
+</header>
+
+<section style="padding-top:20px;">
+  <div class="wrap">
+    <div id="profileContent">
+      <p style="color:var(--muted)">Загрузка профиля...</p>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+async function init() {
+  const me = await (await fetch('/api/me')).json();
+  
+  if (!me.user) {
+    document.getElementById('profileContent').innerHTML = `
+      <div class="panel" style="text-align:center; padding: 50px;">
+        <h2 style="margin-bottom: 15px;">Вы не авторизованы</h2>
+        <p style="color:var(--muted); margin-bottom: 20px;">Войдите через Twitch, чтобы увидеть свой профиль и историю голосов.</p>
+        <a href="/auth/twitch" class="btn btn-primary">Войти через Twitch</a>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('profileContent').innerHTML = `
+    <div class="profile-header">
+      <img src="${me.user.avatar}" class="profile-avatar" alt="Avatar">
+      <div class="profile-info">
+        <h1>${me.user.display_name}</h1>
+        <p>Twitch ID: ${me.user.id}</p>
+      </div>
+      <button id="logoutBtnProfile" class="btn btn-ghost" style="margin-left:auto; border-color: #ef4444; color: #ef4444;">Выйти из аккаунта</button>
+    </div>
+    <h2 style="margin-bottom: 20px; font-size: 24px;">Твои голоса</h2>
+    <div id="votesList"><p style="color:var(--muted)">Загрузка голосов...</p></div>
+  `;
+
+  document.getElementById('logoutBtnProfile').onclick = async () => {
+    await fetch('/auth/logout', {method:'POST'});
+    location.href = '/';
+  };
+
+  try {
+    const r = await fetch('/api/my-votes');
+    if (!r.ok) throw new Error('Ошибка загрузки');
+    const { votes } = await r.json();
+    
+    const list = document.getElementById('votesList');
+    if (!votes.length) {
+      list.innerHTML = `<p style="color:var(--muted)">Вы пока не отдали ни одного голоса. <a href="/" style="color:var(--accent)">Перейти к номинациям</a></p>`;
+      return;
+    }
+
+    list.innerHTML = '';
+    votes.forEach(v => {
+      const date = new Date(v.created_at).toLocaleDateString('ru-RU', { day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' });
+      const avHtml = v.nominee_avatar ? `<img src="${v.nominee_avatar}" class="vote-nom-avatar">` : '';
+      
+      const div = document.createElement('div');
+      div.className = 'vote-card';
+      div.innerHTML = `
+        <div class="vote-cat-icon">${v.category_icon || '🏆'}</div>
+        <div>
+          <div style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700;">${v.category_title}</div>
+          <div style="font-size: 16px; font-weight: 800; color: var(--text);">${v.nominee_name}</div>
+        </div>
+        <div style="margin-left: auto; text-align: right; display: flex; align-items: center; gap: 15px;">
+          <div style="font-size: 11px; color: var(--muted);">${date}</div>
+          ${avHtml}
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  } catch (e) {
+    document.getElementById('votesList').innerHTML = `<p style="color:#ef4444">Не удалось загрузить голоса.</p>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
