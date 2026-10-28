@@ -40,7 +40,7 @@ async function getAppAccessToken() {
   return null;
 }
 
-
+/* ---------- AUTH ---------- */
 app.get('/auth/twitch', (req, res) => {
   const state = crypto.randomBytes(16).toString('hex');
   req.session.oauthState = state;
@@ -84,7 +84,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
 
 app.post('/auth/logout', (req, res) => { req.session = null; res.json({ ok: true }); });
 
-
+/* ---------- API ---------- */
 app.get('/api/me', (req, res) => { res.json({ user: req.session.user || null }); });
 
 app.get('/api/my-votes', async (req, res) => {
@@ -111,7 +111,7 @@ app.get('/api/nominees', async (req, res) => {
   try {
     const user = req.session.user;
     const query = `
-      SELECT n.*, COUNT(v.id) as votes
+      SELECT n.*, COUNT(v.id)::int as votes
       FROM nominees n LEFT JOIN votes v ON v.nominee_id = n.id
       WHERE n.created_by IS NULL 
          OR n.created_by = $1 
@@ -153,7 +153,7 @@ app.post('/api/vote/:id', async (req, res) => {
       [id, nominee.category, user.id, user.login]);
 
     if (nominee.created_by !== null) {
-      const voteCount = (await db.query('SELECT COUNT(*) as count FROM votes WHERE nominee_id=$1', [id])).rows[0].count;
+      const voteCount = (await db.query('SELECT COUNT(*)::int as count FROM votes WHERE nominee_id=$1', [id])).rows[0].count;
       if (Number(voteCount) >= 30) {
         await db.query('UPDATE nominees SET created_by=NULL WHERE id=$1', [id]);
       }
@@ -177,7 +177,6 @@ app.post('/api/suggest', async (req, res) => {
   const token = await getAppAccessToken();
   let finalAvatar = '';
   let realName = '';
-  
   let autoDescription = `Канал на Twitch: twitch.tv/${twitch_login.toLowerCase()}`;
   
   if (token) {
@@ -222,7 +221,7 @@ app.post('/api/suggest', async (req, res) => {
   }
 });
 
-
+/* ---------- ADMIN ---------- */
 function requireAdmin(req, res, next) {
   if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) return next(); 
   const ADMIN_IDS = (process.env.ADMIN_TWITCH_IDS || '').split(',').map(s => s.trim());
@@ -234,7 +233,7 @@ function requireAdmin(req, res, next) {
 app.get('/api/admin/nominees', requireAdmin, async (req, res) => {
   try {
     const rows = (await db.query(`
-      SELECT n.*, COUNT(v.id) as votes
+      SELECT n.*, COUNT(v.id)::int as votes
       FROM nominees n LEFT JOIN votes v ON v.nominee_id = n.id
       GROUP BY n.id ORDER BY n.category ASC, n.sort_order ASC
     `)).rows;
@@ -246,7 +245,7 @@ app.get('/api/admin/results', requireAdmin, async (req, res) => {
   try {
     const categories = (await db.query('SELECT * FROM categories ORDER BY sort_order ASC')).rows;
     const nominees = (await db.query(`
-      SELECT n.*, COUNT(v.id) as votes
+      SELECT n.*, COUNT(v.id)::int as votes
       FROM nominees n LEFT JOIN votes v ON v.nominee_id = n.id
       GROUP BY n.id ORDER BY votes DESC
     `)).rows;
@@ -330,8 +329,8 @@ app.delete('/api/admin/nominees/:id', requireAdmin, async (req, res) => {
 
 app.get('/api/admin/stats', requireAdmin, async (req, res) => {
   try {
-    const totalVotes = (await db.query('SELECT COUNT(*) as count FROM votes')).rows[0].count || 0;
-    const totalUsers = (await db.query('SELECT COUNT(DISTINCT user_id) as count FROM votes')).rows[0].count || 0;
+    const totalVotes = (await db.query('SELECT COUNT(*)::int as count FROM votes')).rows[0].count || 0;
+    const totalUsers = (await db.query('SELECT COUNT(DISTINCT user_id)::int as count FROM votes')).rows[0].count || 0;
     res.json({ totalVotes: Number(totalVotes), totalUsers: Number(totalUsers) });
   } catch (e) { res.status(500).json({ error: 'db_error' }); }
 });
